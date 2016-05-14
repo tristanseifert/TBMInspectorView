@@ -13,14 +13,8 @@
 @implementation TBMAppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    
-    TBMInspectorView *inspector = [[TBMInspectorView alloc] initWithFrame:NSMakeRect(0.0, 0.0, NSWidth(scrollView.frame), 0.0)];
-    [inspector addView:view1 label:@"View 1" expanded:NO];
-    [inspector addView:view2 label:@"View 2" expanded:YES];
-    
-    [scrollView setDocumentView:inspector];
-    
-    [inspector release];
+    [self.inspector addView:self.view1 label:@"View 1" expanded:YES];
+    [self.inspector addView:self.view2 label:@"View 2" expanded:YES];
 }
 
 @end

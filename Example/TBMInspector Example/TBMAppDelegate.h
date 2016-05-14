@@ -8,12 +8,14 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface TBMAppDelegate : NSObject <NSApplicationDelegate> {
-    
-    IBOutlet NSView *view1, *view2;
-    IBOutlet NSScrollView *scrollView;
-}
+@class TBMInspectorView;
+@interface TBMAppDelegate : NSObject <NSApplicationDelegate>
 
-@property (assign) IBOutlet NSWindow *window;
+@property (nonatomic) IBOutlet NSView *view1;
+@property (nonatomic) IBOutlet NSView *view2;
+
+@property (nonatomic) IBOutlet TBMInspectorView *inspector;
+
+@property (nonatomic) IBOutlet NSWindow *window;
 
 @end
