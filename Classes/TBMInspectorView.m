@@ -16,6 +16,12 @@ NSString *TBMInspectorViewDetailViewDidExpandNotification = @"TBMInspectorViewDe
 NSString *TBMInspectorViewDetailViewWillCollapseNotification = @"TBMInspectorViewDetailViewWillCollapseNotification";
 NSString *TBMInspectorViewDetailViewDidCollapseNotification = @"TBMInspectorViewDetailViewDidCollapseNotification";
 
+@interface TBMInspectorView ()
+
+@property (nonatomic) NSLayoutConstraint *widthConstraint;
+
+@end
+
 @implementation TBMInspectorView
 
 - (void)setDelegate:(id<TBInspectorViewDelegate>)delegate {
@@ -55,11 +61,14 @@ NSString *TBMInspectorViewDetailViewDidCollapseNotification = @"TBMInspectorView
 	}
 }
 
-// adds required constraints
+/**
+ * Adds the required width constraint, so that the inspector view will
+ * always fill the width of the scroll view.
+ */
 - (void) viewDidMoveToSuperview {
 	NSLayoutConstraint *c;
 	
-	if(self.superview != nil && self.window.contentView.constraints.count != 0) {
+	if(self.superview != nil) {
 		// add an autolayout constraint so we fill width of scroll view
 		NSScrollView *scrollView = self.enclosingScrollView;
 		
@@ -70,7 +79,17 @@ NSString *TBMInspectorViewDetailViewDidCollapseNotification = @"TBMInspectorView
 										 attribute:NSLayoutAttributeWidth
 										multiplier:1 constant:0];
 		
-		[scrollView addConstraint:c];
+		self.widthConstraint = c;
+		[scrollView addConstraint:self.widthConstraint];
+	}
+}
+
+/**
+ * Removes the previously added constraints.
+ */
+- (void) viewWillMoveToSuperview:(NSView *) newSuperview {
+	if(self.widthConstraint != nil) {
+		[self.enclosingScrollView removeConstraint:self.widthConstraint];
 	}
 }
 
@@ -82,7 +101,6 @@ NSString *TBMInspectorViewDetailViewDidCollapseNotification = @"TBMInspectorView
 	self = [super initWithFrame:frame];
 	if (self) {
 		
-		self.autoresizingMask = NSViewWidthSizable;
 	}
 	return self;
 }
