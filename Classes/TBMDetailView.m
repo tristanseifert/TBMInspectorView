@@ -6,6 +6,8 @@
 //  Copyright (c) 2014 Thore Bartholomäus. All rights reserved.
 //
 
+#import <QuartzCore/QuartzCore.h>
+
 #import "TBMDetailView.h"
 
 #import "TBMInspectorView_Internal.h"
@@ -44,10 +46,13 @@ CGFloat const TBDetailViewBarHeight = 19.0;
     
     self = [super initWithFrame:frame];
     if (self) {
-        
         self.collapsed = !expanded;
         self.autoresizingMask = (NSViewWidthSizable);
-        
+		
+		// set up for animations
+		self.wantsLayer = YES;
+		self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
+		
         //Create the label for the bar
         NSTextField *label = [[NSTextField alloc] init];
         [label.cell setControlSize:NSSmallControlSize];
@@ -136,34 +141,47 @@ CGFloat const TBDetailViewBarHeight = 19.0;
 #pragma mark Drawing
 
 - (void)drawRect:(NSRect)dirtyRect {
-    
+	NSBezierPath *line;
+	
     [super drawRect:dirtyRect];
     
     //Draw bottom line
     [[NSColor colorWithCalibratedRed:0.7 green:0.7 blue:0.7 alpha:1.0] setStroke];
     
     NSRect bounds = self.bounds;
-    //Inseted bezierPath the 0px line width to create a perfect 1px line
-    NSBezierPath *bottomLine = [NSBezierPath bezierPathWithRect:NSMakeRect(NSMinX(bounds), NSMinY(bounds) + 0.5, NSWidth(bounds), 0.0)];
-    bottomLine.lineCapStyle = NSButtLineCapStyle;
-    [bottomLine stroke];
+	
+    // draw a line at the bottom
+    line = [NSBezierPath bezierPathWithRect:NSMakeRect(NSMinX(bounds), NSMinY(bounds) + 0.5, NSWidth(bounds), 0.0)];
+    line.lineCapStyle = NSButtLineCapStyle;
+    [line stroke];
+	
+	// draw a line at the top, under the title
+	line = [NSBezierPath bezierPathWithRect:NSMakeRect(NSMinX(bounds), 0.5 + NSHeight(bounds) - TBDetailViewBarHeight, NSWidth(bounds), 0.0)];
+	line.lineCapStyle = NSButtLineCapStyle;
+	[line stroke];
 }
 
 #pragma mark -
 #pragma mark Expand/collpase
-
-- (void)collapse {
-    
-    [self.detailView removeFromSuperview];
-    
+- (void) collapse {
     //Decrease the frame of self
     NSRect oldRect = self.frame;
     NSRect collapsedFrame = NSMakeRect(0.0,
                                        NSMinY(oldRect) + NSHeight(_detailView.frame),
                                        NSWidth(oldRect),
                                        TBDetailViewBarHeight);
-    
-    self.frame = collapsedFrame;
+	
+	// animate
+	[NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
+		context.duration = 10.33;
+		context.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+		
+		self.detailView.animator.alphaValue = 0.f;
+		self.animator.frame = collapsedFrame;
+	} completionHandler:^{
+		[self.detailView removeFromSuperview];
+	}];
+	
     //The the flag
     self.collapsed = YES;
     
@@ -172,8 +190,7 @@ CGFloat const TBDetailViewBarHeight = 19.0;
                                                              hightlighted:NO];
 }
 
-- (void)expand {
-    
+- (void) expand {
     //Increase the frame of self
     NSRect oldRect = self.frame;
     NSRect detailViewFrame = self.detailView.frame;
@@ -181,13 +198,24 @@ CGFloat const TBDetailViewBarHeight = 19.0;
                                     NSMaxY(oldRect) - TBDetailViewBarHeight - NSHeight(detailViewFrame),
                                     NSWidth(oldRect),
                                     NSHeight(detailViewFrame) + TBDetailViewBarHeight);
-    self.frame = expanedRect;
-    //Position the detailof the at the bottom left
-    detailViewFrame.origin = NSZeroPoint;
-    detailViewFrame.size.width = NSWidth(self.frame);
-    self.detailView.frame = detailViewFrame;
-    
-    [self addSubview:self.detailView];
+	
+	//Position the detailof the at the bottom left
+	detailViewFrame.origin = NSZeroPoint;
+	detailViewFrame.size.width = NSWidth(self.frame);
+	
+	self.detailView.alphaValue = 0.f;
+	[self addSubview:self.detailView];
+	
+	// animate frame changes
+	[NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
+		context.duration = 10.33;
+		context.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+		
+		self.detailView.animator.alphaValue = 1.f;
+		
+		self.animator.frame = expanedRect;
+		self.detailView.animator.frame = detailViewFrame;
+	} completionHandler:nil];
     
     //Set the flag
     self.collapsed = NO;
@@ -252,7 +280,7 @@ CGFloat const TBDetailViewBarHeight = 19.0;
     
     if (NSPointInRect(coordinateInView, self.barArea)) {
         
-        BOOL alternateCondition = (self.collapsed && [(TBMInspectorView *)self.superview shouldExpanItem:self]) ||
+        BOOL alternateCondition = (self.collapsed && [(TBMInspectorView *)self.superview shouldExpandItem:self]) ||
         (!self.collapsed && [(TBMInspectorView *)self.superview shouldCollapseItem:self]);
         
         if (alternateCondition) {
@@ -274,7 +302,7 @@ CGFloat const TBDetailViewBarHeight = 19.0;
         NSDictionary *userInfo = [[NSDictionary alloc] initWithObjectsAndKeys:self, @"NSObject", nil];
         
         //The delegate if the self should be expanded
-        if ( self.collapsed && [(TBMInspectorView *)self.superview shouldExpanItem:self] ) {
+        if ( self.collapsed && [(TBMInspectorView *)self.superview shouldExpandItem:self] ) {
             
             [[NSNotificationCenter defaultCenter] postNotificationName:TBMInspectorViewDetailViewWillExpandNotification
                                                                 object:self.superview

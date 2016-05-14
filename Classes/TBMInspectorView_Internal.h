@@ -12,7 +12,7 @@
 
 - (void)updateDetailViewPositions;
 
-- (BOOL)shouldExpanItem:(TBMDetailView *)detailView;
+- (BOOL)shouldExpandItem:(TBMDetailView *)detailView;
 
 - (BOOL)shouldCollapseItem:(TBMDetailView *)detailView;
 

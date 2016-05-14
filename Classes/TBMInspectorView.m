@@ -203,11 +203,10 @@ NSString *TBMInspectorViewDetailViewDidCollapseNotification = @"TBMInspectorView
 	self.frame = viewFrame;
 }
 
-- (BOOL)shouldExpanItem:(TBMDetailView *)detailView {
-	
+- (BOOL)shouldExpandItem:(TBMDetailView *)detailView {
 	BOOL returnValue = YES;
 	
-	//Ask the delegate if the item get expanded
+	//Ask the delegate if the item shall be expanded
 	id delegate = self.delegate;
 	if (delegate && [delegate respondsToSelector:@selector(inspectorView:shouldExpandItem:)]) {
 		returnValue = [delegate inspectorView:self shouldExpandItem:detailView];
@@ -217,7 +216,6 @@ NSString *TBMInspectorViewDetailViewDidCollapseNotification = @"TBMInspectorView
 }
 
 - (BOOL)shouldCollapseItem:(TBMDetailView *)detailView {
-	
 	BOOL returnValue = YES;
 	
 	//Ask the delegate if the item should get collapsed
