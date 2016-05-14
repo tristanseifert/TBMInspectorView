@@ -26,7 +26,7 @@ Code from the example project for setting up the inspector view:
 ```
 
 ## Deployment
-Supports 10.6+, not tested in Autolayout environment yet
+Supports 10.6+; only tested on 10.11, but has limited Autolayout support.
 
 ## License
 MIT
